@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ml" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker | വരവ്-ചെലവ് കണക്ക്</title>
+    <!-- Google Fonts: Plus Jakarta Sans & Noto Sans Malayalam -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Decorative Glows -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="app-container">
+        <!-- Header / Navbar -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i data-lucide="wallet"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Expense Tracker</h1>
+                    <p>വരവ്-ചെലവ് കണക്ക് പുസ്തകം</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="today-badge" id="currentDateBadge">
+                    <i data-lucide="calendar"></i>
+                    <span id="headerDateText">Today</span>
+                </div>
+                <button class="icon-btn" id="exportCsvBtn" title="CSV ഡൗൺലോഡ് ചെയ്യുക (Export CSV)">
+                    <i data-lucide="download"></i>
+                    <span class="btn-label">CSV</span>
+                </button>
+                <button class="icon-btn" id="themeToggleBtn" title="നിറം മാറ്റുക (Toggle Theme)" aria-label="Toggle Theme">
+                    <i data-lucide="sun" class="sun-icon"></i>
+                    <i data-lucide="moon" class="moon-icon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Top Summary Cards -->
+        <section class="summary-grid" aria-label="Account Summary">
+            <!-- Total Balance Card -->
+            <div class="summary-card balance-card">
+                <div class="card-top">
+                    <div>
+                        <span class="card-label">ആകെ ബാലൻസ് (Total Balance)</span>
+                        <h2 class="card-amount" id="totalBalance">₹0.00</h2>
+                    </div>
+                    <div class="card-icon balance-icon">
+                        <i data-lucide="landmark"></i>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="status-pill" id="balanceStatusPill">
+                        <i data-lucide="sparkles"></i>
+                        <span id="balanceStatusText">കണക്കുകൾ ചേർത്തു തുടങ്ങാം</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Total Income Card -->
+            <div class="summary-card income-card">
+                <div class="card-top">
+                    <div>
+                        <span class="card-label">ആകെ വരവ് (Total Income)</span>
+                        <h2 class="card-amount income-text" id="totalIncome">₹0.00</h2>
+                    </div>
+                    <div class="card-icon income-icon">
+                        <i data-lucide="trending-up"></i>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="meta-text" id="incomeCountText">0 എൻട്രികൾ (Entries)</span>
+                </div>
+            </div>
+
+            <!-- Total Expense Card -->
+            <div class="summary-card expense-card">
+                <div class="card-top">
+                    <div>
+                        <span class="card-label">ആകെ ചെലവ് (Total Expense)</span>
+                        <h2 class="card-amount expense-text" id="totalExpense">₹0.00</h2>
+                    </div>
+                    <div class="card-icon expense-icon">
+                        <i data-lucide="trending-down"></i>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="meta-text">ഇന്നത്തെ ചെലവ് (Today): <strong id="todayExpense">₹0.00</strong></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <main class="main-grid">
+            <!-- Left Column: Add Transaction & Category Breakdown -->
+            <div class="left-col">
+                <!-- Add / Edit Transaction Card -->
+                <section class="glass-card form-card">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i data-lucide="plus-circle" id="formHeaderIcon"></i>
+                            <h3 id="formTitle">പുതിയ കണക്ക് ചേർക്കുക (Add Entry)</h3>
+                        </div>
+                        <button type="button" class="cancel-edit-btn hidden" id="cancelEditBtn">
+                            റദ്ദാക്കുക (Cancel)
+                        </button>
+                    </div>
+
+                    <form id="transactionForm" autocomplete="off">
+                        <input type="hidden" id="editTransactionId" value="">
+
+                        <!-- Type Selector: Expense vs Income -->
+                        <div class="type-toggle-group" role="radiogroup" aria-label="Transaction Type">
+                            <input type="radio" name="txType" id="typeExpense" value="expense" checked>
+                            <label for="typeExpense" class="type-toggle expense-toggle">
+                                <i data-lucide="arrow-down-right"></i>
+                                <span>ചെലവ് (Expense)</span>
+                            </label>
+
+                            <input type="radio" name="txType" id="typeIncome" value="income">
+                            <label for="typeIncome" class="type-toggle income-toggle">
+                                <i data-lucide="arrow-up-right"></i>
+                                <span>വരവ് (Income)</span>
+                            </label>
+                        </div>
+
+                        <!-- Description / Title -->
+                        <div class="form-group">
+                            <label for="txTitle">വിവരണം (Description) <span class="req">*</span></label>
+                            <div class="input-wrapper">
+                                <i data-lucide="file-text" class="input-icon"></i>
+                                <input 
+                                    type="text" 
+                                    id="txTitle" 
+                                    placeholder="ഉദാ: ഉച്ചഭക്ഷണം, ബസ് ചാർജ്, ശമ്പളം..." 
+                                    required 
+                                    maxlength="60"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Amount & Date Row -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="txAmount">തുക (Amount ₹) <span class="req">*</span></label>
+                                <div class="input-wrapper">
+                                    <span class="currency-prefix">₹</span>
+                                    <input 
+                                        type="number" 
+                                        id="txAmount" 
+                                        placeholder="0.00" 
+                                        step="0.01" 
+                                        min="0.01" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="txDate">തീയതി (Date) <span class="req">*</span></label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="calendar-days" class="input-icon"></i>
+                                    <input type="date" id="txDate" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Category Visual Grid / Selector -->
+                        <div class="form-group">
+                            <label>കാറ്റഗറി തിരഞ്ഞെടുക്കുക (Category) <span class="req">*</span></label>
+                            <div class="category-chip-grid" id="categoryChipGrid">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                            <input type="hidden" id="txCategory" required>
+                        </div>
+
+                        <!-- Optional Note -->
+                        <div class="form-group">
+                            <label for="txNote">കുറിപ്പ് (Optional Note)</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="sticky-note" class="input-icon"></i>
+                                <input 
+                                    type="text" 
+                                    id="txNote" 
+                                    placeholder="കൂടുതൽ വിവരങ്ങൾ (ഉദാ: UPI, Cash)..." 
+                                    maxlength="80"
+                                >
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            <i data-lucide="check-circle-2"></i>
+                            <span id="submitBtnText">കണക്കിൽ ചേർക്കുക (Save Entry)</span>
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Category Breakdown Card -->
+                <section class="glass-card breakdown-card">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i data-lucide="pie-chart"></i>
+                            <h3>കാറ്റഗറി തിരിച്ചുള്ള ചെലവ് (Category Wise)</h3>
+                        </div>
+                    </div>
+
+                    <!-- Donut Chart + Legend Summary -->
+                    <div class="chart-container" id="chartContainer">
+                        <div class="donut-wrapper">
+                            <svg class="donut-chart" viewBox="0 0 120 120" id="expenseDonutSvg">
+                                <circle class="donut-bg" cx="60" cy="60" r="46" fill="transparent" stroke-width="14"></circle>
+                            </svg>
+                            <div class="donut-center">
+                                <span class="donut-center-label" id="donutCenterLabel">ആകെ ചെലവ്</span>
+                                <strong class="donut-center-value" id="donutCenterValue">₹0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="category-bars-list" id="categoryBreakdownList">
+                        <!-- Dynamically rendered category breakdown bars -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Filters & Daily Transactions List -->
+            <div class="right-col">
+                <section class="glass-card history-card">
+                    <div class="section-header history-header">
+                        <div class="section-title">
+                            <i data-lucide="receipt"></i>
+                            <h3>ദിവസേനയുള്ള കണക്കുകൾ (Daily Transactions)</h3>
+                        </div>
+                        <div class="history-actions">
+                            <button type="button" class="text-btn" id="loadSampleBtn" title="സാമ്പിൾ ഡാറ്റ ചേർക്കുക">
+                                <i data-lucide="wand-2"></i>
+                                <span>സാമ്പിൾ ഡാറ്റ</span>
+                            </button>
+                            <button type="button" class="text-btn danger-text-btn" id="clearAllBtn" title="എല്ലാ കണക്കുകളും മായ്ക്കുക">
+                                <i data-lucide="trash-2"></i>
+                                <span>എല്ലാം മായ്ക്കുക</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Bar -->
+                    <div class="filter-bar">
+                        <!-- Search Input -->
+                        <div class="search-box">
+                            <i data-lucide="search" class="search-icon"></i>
+                            <input 
+                                type="text" 
+                                id="searchInput" 
+                                placeholder="തിരയുക (Search description, note)..."
+                            >
+                        </div>
+
+                        <!-- Filter Controls Row -->
+                        <div class="filter-controls">
+                            <!-- Type Filter Pills -->
+                            <div class="filter-tabs" id="typeFilterTabs">
+                                <button type="button" class="filter-tab active" data-filter-type="all">എല്ലാം (All)</button>
+                                <button type="button" class="filter-tab" data-filter-type="expense">ചെലവ്</button>
+                                <button type="button" class="filter-tab" data-filter-type="income">വരവ്</button>
+                            </div>
+
+                            <!-- Category Filter Select -->
+                            <div class="filter-select-wrap">
+                                <select id="categoryFilter" aria-label="Filter by category">
+                                    <option value="all">എല്ലാ കാറ്റഗറികളും (All Categories)</option>
+                                </select>
+                            </div>
+
+                            <!-- Date Filter Input -->
+                            <div class="filter-date-wrap">
+                                <input type="date" id="dateFilter" title="തീയതി തിരഞ്ഞെടുക്കുക (Filter by Date)">
+                                <button type="button" class="clear-date-btn hidden" id="clearDateFilterBtn" title="തീയതി ഫിൽട്ടർ മാറ്റുക">
+                                    <i data-lucide="x"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filtered Summary Strip -->
+                    <div class="filtered-strip" id="filteredSummaryStrip">
+                        <span id="filteredCountLabel">0 കണക്കുകൾ കാണിക്കുന്നു</span>
+                        <span id="filteredNetAmount">ആകെ: ₹0.00</span>
+                    </div>
+
+                    <!-- Transactions List Grouped by Date -->
+                    <div class="transactions-container" id="transactionsContainer">
+                        <!-- Rendered via JavaScript -->
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <p>Expense Tracker • വരവ്-ചെലവ് കണക്ക് • നിങ്ങളുടെ ഡാറ്റ സുരക്ഷിതമായി ബ്രൗസറിൽ സൂക്ഷിക്കുന്നു</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
